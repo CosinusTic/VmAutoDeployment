@@ -1,0 +1,24 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: Configure Keyboard layout
+      command: localectl set-keymap "{{ keyboard_layout }}"
+
+    - name: Set hostname
+      hostname:
+        name: "{{ hostname }}"
+
+    - name: Create group "{{ group_name }}"
+      group:
+        name: admin
+
+    - name: Create user "{{ username }}" with admin access
+      user:
+        name: "{{ username }}"
+        password: "{{ password | password_hash('sha512') }}"
+        groups: admin
+
+    - name: Debug - Show user information
+      debug:
+        var: ansible_users
