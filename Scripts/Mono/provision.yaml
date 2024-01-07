@@ -1,0 +1,36 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: Configure Keyboard layout
+      debconf:
+        name: keyboard-configuration
+        question: keyboard-configuration/xkb-keymap
+        value: "{{ keyboard_layout }}"
+        vtype: select
+
+    - name: Set hostname
+      hostname:
+        name: "{{ hostname }}"
+
+    - name: Create group "{{ group_name }}"
+      group:
+        name: admin
+
+    - name: Create user "{{ username }}" with admin access
+      user:
+        name: "{{ username }}"
+        password: "{{ password | password_hash('sha512') }}"
+        groups: admin
+        shell: /bin/bash
+        append: yes
+        createhome: yes
+        state: present # in case account already exists
+
+    - name: Update package cache
+      apt:
+        update_cache: yes
+
+    - name: Debug - Show user information
+      debug:
+        var: ansible_users

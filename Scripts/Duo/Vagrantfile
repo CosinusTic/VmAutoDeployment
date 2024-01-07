@@ -5,34 +5,81 @@
 # configures the configuration version (we support older styles for
 # backwards compatibility). Please don't change it unless you know what
 # you're doing.
+
+# Variables
+_username_1 = "vagrant1"
+_username_2 = "vagrant2"
+_group_name = "admin"
+_password = "123"
+_keyboard_layout = "fr"
+_hostname_1 = "Host1"
+_hostname_2 = "Host2"
+
 Vagrant.configure("2") do |config|
-	# Setting os
-	config.vm.box = "debian/bullseye64"
-
-	# Setting hostname
-	config.vm.hostname = "HostTestVagrantDeployment"
-
-	# Network configuration (ssh, IP address)	
-	config.vm.network "forwarded_port", guest: 22, host: 2222
 	
-	# Assigning cpus and RAM. 
-	config.vm.provider "virtualbox" do |vb|
-		vb.memory = "2048"
-		vb.cpus = 2
-	end
+	# Configure vm1
+	config.vm.define "vm1" do |vm1|
+		# Setting os
+		vm1.vm.box = "debian/bullseye64"
+
+		# Setting hostname
+		vm1.vm.hostname = "HostDep1"
+
+		# Network configuration (ssh, IP address)	
+		vm1.vm.network "forwarded_port", guest: 22, host: 2222
+		vm1.ssh.insert_key = true
+		vm1.vm.network "private_network", type: "static", ip: "192.168.56.10", netmask: "255.255.255.0"
+
+		# Assigning cpus and RAM. 
+		vm1.vm.provider "virtualbox" do |vb|
+			vb.memory = "2048"
+			vb.cpus = 2
+		end
 	
-	# Executing the ansible playbook
-	config.vm.provision "ansible" do |ansible|
-		ansible.playbook = "provision.yaml"
-		ansible.extra_vars = { 
-			username: "vagrant", 
-			group_name: "admin", 
-			password: "123", 
-			keyboard_layout: "fr",
-			hostname: "HostTestVagrantDeployment"
-		}
+		# Executing the ansible playbook
+		vm1.vm.provision "ansible" do |ansible|
+			ansible.playbook = "provision.yaml"
+			ansible.extra_vars = { 
+				username: _username_1, 
+				group_name: _group_name, 
+				password: _password, 
+				keyboard_layout: _keyboard_layout,
+				hostname: _hostname_1
+			}
+		end
 	end
 
+	# Configuring vm2
+	config.vm.define "vm2" do |vm2|
+		#Setting os
+		vm2.vm.box = "debian/bullseye64"
+		
+		# Setting vm2 hostname
+		vm2.vm.hostname = "HostDep2"
+		
+		# Configuring network		
+		vm2.vm.network "forwarded_port", guest: 22, host: 2223
+		vm2.ssh.insert_key = true
+		vm2.vm.network "private_network", type: "static", ip: "192.168.56.11", netmask: "255.255.255.0"
+		
+		# Assigning cpus and RAM
+		vm2.vm.provider "virtualbox" do |vb|
+			vb.memory = "2048"
+			vb.cpus = 2
+		end
+
+		# Executing the ansible playbook
+		vm2.vm.provision "ansible" do |ansible|
+			ansible.playbook = "provision.yaml"
+			ansible.extra_vars = {
+				username: _username_1,
+				group_name: _group_name,
+				password: _password,
+				keyboard_layout: _keyboard_layout,
+				hostname: _hostname_2
+			}
+		end
+	end
 end
 	
   # Disable automatic box update checking. If you disable this, then

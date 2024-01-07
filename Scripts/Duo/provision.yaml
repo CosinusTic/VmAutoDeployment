@@ -3,7 +3,11 @@
   become: yes
   tasks:
     - name: Configure Keyboard layout
-      command: localectl set-keymap "{{ keyboard_layout }}"
+      debconf:
+        name: keyboard-configuration
+        question: keyboard-configuration/xkb-keymap
+        value: "{{ keyboard_layout }}"
+        vtype: select
 
     - name: Set hostname
       hostname:
@@ -18,6 +22,14 @@
         name: "{{ username }}"
         password: "{{ password | password_hash('sha512') }}"
         groups: admin
+        shell: /bin/bash
+        append: yes
+        createhome: yes
+        state: present # in case account already exists
+
+    - name: Update package cache
+      apt:
+        update_cache: yes
 
     - name: Debug - Show user information
       debug:
